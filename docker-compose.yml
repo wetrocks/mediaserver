@@ -1,0 +1,60 @@
+version: '3'
+services:
+    nordvpn:
+      image: bubuntux/nordvpn
+      cap_add:
+        - NET_ADMIN
+        - SYS_MODULE
+      devices:
+        - /dev/net/tun
+      environment:
+        - USER=<user>
+        - PASS=<pass>
+        - CONNECT=United_States
+        - TECHNOLOGY=NordLynx
+    transmission:
+      image: linuxserver/transmission
+      environment:
+        - PUID=1001
+        - PGID=1000 
+        - TZ=America/Kralendijk
+      volumes:
+        - /share/CACHEDEV1_DATA/mediaserver/transmission/config:/config
+        - /share/CACHEDEV1_DATA/mediaserver/transmission/downloads:/downloads
+        - /share/CACHEDEV1_DATA/mediaserver/transmission/watch:/watch
+      network_mode: "service:nordvpn"
+    nginx:
+      image: nginx:1.13-alpine
+      stdin_open: true
+      ports:
+        - "9091:80"
+      volumes:
+        - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+      links:
+        - nordvpn:transmission
+    sonarr:
+      image: linuxserver/sonarr
+      environment:
+        - PUID=1001
+        - PGID=1000 
+        - TZ=America/Kralendijk
+      volumes:
+        - /share/CACHEDEV1_DATA/sonarr/config:/config
+        - /share/CACHEDEV1_DATA/plex/media/shows:/tv
+        - /share/CACHEDEV1_DATA/mediaserver/transmission/downloads:/downloads
+      ports:
+        - 8989:8989
+    jackett:
+      image: linuxserver/jackett
+      environment:
+        - PUID=1001
+        - PGID=1000 
+        - TZ=America/Kralendijk
+      volumes:
+        - /share/CACHEDEV1_DATA/jackett/config:/config
+        - /share/CACHEDEV1_DATA/jackett/blackhole:/downloads
+      ports:
+        - 9117:9117
+
+
+          
