@@ -1,17 +1,19 @@
 version: '3'
 services:
     nordvpn:
-      image: bubuntux/nordvpn
+      image: bubuntux/nordvpn:v3.9.1
       cap_add:
         - NET_ADMIN
-        - SYS_MODULE
+#        - SYS_MODULE
+#      sysctls:
+#        - net.ipv4.conf.all.rp_filter=2
       devices:
         - /dev/net/tun
       environment:
         - USER=${VPN_USER}
         - PASS=${VPN_PASS}
-        - CONNECT=P2P
-        - TECHNOLOGY=OpenVPN
+        - CONNECT=us -g p2p
+        - TECHNOLOGY=NordLynx
     transmission:
       image: linuxserver/transmission
       environment:
@@ -20,7 +22,7 @@ services:
         - TZ=${TIMEZONE}
       volumes:
         - ${SERVER_BASE_PATH}/transmission/config:/config
-        - ${SERVER_BASE_PATH}/transmission/downloads:/downloads
+        - ${TRANS_DL}:/downloads
         - ${SERVER_BASE_PATH}/transmission/watch:/watch
       network_mode: "service:nordvpn"
     nginx:
@@ -55,7 +57,7 @@ services:
       volumes:
         - ${SERVER_BASE_PATH}/sonarr/config:/config
         - ${SERVER_BASE_PATH}/plex/media/shows:/tv
-        - ${SERVER_BASE_PATH}/transmission/downloads:/downloads
+        - ${TRANS_DL}:/downloads
       ports:
         - 8989:8989
     radarr:
@@ -67,7 +69,7 @@ services:
       volumes:
         - ${SERVER_BASE_PATH}/radarr/config:/config
         - ${SERVER_BASE_PATH}/plex/media/movies:/movies
-        - ${SERVER_BASE_PATH}/transmission/downloads:/downloads
+        - ${TRANS_DL}:/downloads
       ports:
         - 7878:7878
     jackett:
@@ -92,3 +94,31 @@ services:
         - ${SERVER_BASE_PATH}/ombi/config:/config
       ports:
         - 3579:3579
+    lazylibrarian:
+      image: linuxserver/lazylibrarian
+      container_name: lazylibrarian
+      environment:
+        - PUID=${PUID}
+        - PGID=${PGID}
+        - TZ=${TIMEZONE}
+        - DOCKER_MODS=linuxserver/calibre-web:calibre
+      volumes:
+        - ${SERVER_BASE_PATH}/lazylibrarian/config:/config
+        - ${TRANS_DL}/complete:/downloads
+        - ${SERVER_BASE_PATH}/calibre/library:/books
+      ports:
+        - 5299:5299
+    calibre-web:
+      image: linuxserver/calibre-web
+      container_name: calibre-web
+      environment:
+        - PUID=${PUID}
+        - PGID=${PGID}
+        - TZ=${TIMEZONE}
+      volumes:
+        - ${SERVER_BASE_PATH}/calibre-web/config:/config
+        - ${TRANS_DL}:/downloads
+        - ${SERVER_BASE_PATH}/calibre/library:/books
+      ports:
+        - 8083:8083
+
