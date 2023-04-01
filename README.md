@@ -1,57 +1,34 @@
+# Home media server on Synology NAS
+Docker stack with Wireguard, [Transmission](https://transmissionbt.com), and a reverse [nginx](http://nginx.org) proxy, with the addition of media server apps.
 
-dir tree
-
-
-THIS IS COPIED, change me
-
-# docker-openvpn
-Docker stack with [OpenVPN](https://openvpn.net), [Transmission](https://transmissionbt.com), and a reverse [nginx](http://nginx.org) proxy.
-
-This is useful if you want to run containers over a VPN but don't want to run the openvpn directly on a container host. It uses [Docker Container Networking](https://docs.docker.com/compose/networking/ ) and requires [docker-engine](https://github.com/moby/moby) 1.10+ and [docker-compose](https://github.com/docker/compose) 1.6.0+, although more current versions are highly recommended.
+Running on Synology requires the Wireguard kernel module to be installed.
 
 ## Files
 
-- Dockerfile.openvpn
-  - Takes a .ovpn configuration and connects an openvpn client
-- Dockerfile.transmission
-  - Runs the `transmission-daemon` bittorrent application
-  - Listens on port 20000 for incoming UDP connections
-  - Listens on port 9091 for RPC (web) connections
 - docker-compose.yml
-  - Brings up OpenVPN, Transmission, and Nginx containers
-  - `openvpn` service will connect to VPN, granting NET_ADMIN capability and using the `/dev/net/tun` device for VPN
+  - Brings up containers
+  - `vpn` service will connect to Wireguard VPN, granting NET_ADMIN capability and using the wireguard kernel capability of the host
   - `transmission` service brings up Transmission listening on port 9091 and volume mounts a local directory for stateful configuration
-    - Uses the `openvpn` service networking to route all traffic over the VPN
+    - Uses the `vpn` service networking to route all traffic over the VPN
   - `nginx` service proxies incoming requests to port 9091 on the container hosts interface and routs traffic to `transmission` service
     - required since port 9091 on the `transmission` service does not listen on the container hosts network interface since it's using the `openvpn` service network
+  - `plex` service serves content to the LAN using host network
+  - `*arr, jackett ,etc` handles content
+- default.conf - Configuration for nginx
+- vars.env - Example .env environment file for docker compose
+- wg0.conf.example - Example wireguard config
 
 ## Configuration
 
-- OpenVPN
-  - Download/generate a `.ovpn` configuration and update the `Dockerfile.ovpn` configuration to copy it into the container at build time
+- Environment
+  - Copy vars.env to .env and set variables as appropriate.  See https://docs.linuxserver.io for details on PUID and PGID.
+- VPN
+  - Copy wg0.conf.example to ${CONFIG_BASE_PATH}/wireguard/wg0.conf.  Update to set the public key and address:port of the Wireguard server, and the private key and address for the wireguard client (vpn container).  Note the Synology-specific PostUp/PreDown scripts.
 - Transmission
   - All transmission settings are stateful and are defined in the volume mount, which defaults to `/opt/transmission`. Put the `settings.json` file thereand it will be used everytime the service starts up. This allows for resuming and stateful operation.
 - Nginx
-  - Simple reverse proxy, but could include SSL and other configuration if needed.
+  - Simple reverse proxy, but could include SSL and other configuration if needed.  default.conf can be left as-is
 
 ## Running
 
-The `docker-compose.yml` file will bring up a container stack, building the required containers the first time.
-
-Bring the stack up
-
-```
-docker-compose up
-```
-
-Re-building
-
-```
-docker-compose build
-docker-compose up
-```
-
-Stdout will show the `openvpn` service making the connection, and after 10 seconds the `transmission` service will start, using the `openvpn` service networking and routing all traffic over OpenVPN.
-
-Once the stack is running, connect to the nginx reverse proxy to use Transmission at http://localhost:9091.
-
+The `docker-compose.yml` file will bring up a container stack.  Each app can then be configured as needed.
