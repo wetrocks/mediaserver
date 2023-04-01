@@ -1,0 +1,13 @@
+[Interface]
+PrivateKey = <Wireguard private key>
+Address = <Wireguard IP address (CIDR).  i.e.: 10.5.0.2/16>
+# Needed for Synology, maybe not others.  See for details: https://github.com/bubuntux/nordlynx/discussions/41
+PostUp = ip -4 route add $(wg | awk -F'[: ]' '/endpoint/ {print $5}') via $(ip route | awk '/default/ {print $3}')
+PreDown = ip -4 route del $(route -n | awk '/255.255.255.255/ {print $1}') via $(ip route | awk '/default/ {print $3}')
+
+[Peer]
+PublicKey = <Public key of wireguard server>
+# Needed for Synology, maybe not others.  See for details: https://github.com/bubuntux/nordlynx/discussions/41
+AllowedIPs = 0.0.0.0/1, 128.0.0.0/1
+Endpoint = <IP:port of wireguard server>
+PersistentKeepalive = 25
