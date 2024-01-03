@@ -1,7 +1,7 @@
 version: '3'
 services:
   vpn:
-    image: lscr.io/linuxserver/wireguard:alpine
+    image: lscr.io/linuxserver/wireguard:latest
     container_name: vpn
     cap_add:
       - NET_ADMIN
@@ -15,7 +15,7 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=1
   transmission:
-    image: linuxserver/transmission:latest
+    image: lscr.io/linuxserver/transmission:latest
     container_name: transmission
     environment:
       - PUID=${PUID}
@@ -34,7 +34,7 @@ services:
     volumes:
       - ./default.conf:/etc/nginx/conf.d/default.conf:ro
   plex:
-    image: linuxserver/plex:latest
+    image: lscr.io/linuxserver/plex:latest
     container_name: plex
     network_mode: host
     environment:
@@ -46,7 +46,7 @@ services:
       - ${DATA_BASE_PATH}/media/tv:/tv
       - ${DATA_BASE_PATH}/media/movies:/movies
   sonarr:
-    image: linuxserver/sonarr
+    image: lscr.io/linuxserver/sonarr
     container_name: sonarr
     environment:
       - PUID=${PUID}
@@ -58,7 +58,7 @@ services:
     ports:
       - 8989:8989
   radarr:
-    image: linuxserver/radarr
+    image: lscr.io/linuxserver/radarr
     container_name: radarr
     environment:
       - PUID=${PUID}
@@ -70,7 +70,7 @@ services:
     ports:
       - 7878:7878
   jackett:
-    image: linuxserver/jackett
+    image: lscr.io/linuxserver/jackett
     container_name: jackett
     environment:
       - PUID=${PUID}
@@ -82,7 +82,7 @@ services:
     ports:
       - 9117:9117
   ombi:
-    image: linuxserver/ombi
+    image: lscr.io/linuxserver/ombi
     container_name: ombi
     environment:
       - PUID=${PUID}
@@ -93,7 +93,7 @@ services:
     ports:
       - 3579:3579
   lazylibrarian:
-    image: linuxserver/lazylibrarian
+    image: lscr.io/linuxserver/lazylibrarian
     container_name: lazylibrarian
     environment:
       - PUID=${PUID}
@@ -107,7 +107,7 @@ services:
     ports:
       - 5299:5299
   calibre-web:
-    image: linuxserver/calibre-web
+    image: lscr.io/linuxserver/calibre-web
     container_name: calibre-web
     environment:
       - PUID=${PUID}
@@ -119,14 +119,26 @@ services:
       - ${DATA_BASE_PATH}/media/books:/books
     ports:
       - 8083:8083
-  organizr:
-    image: organizr/organizr
-    container_name: organizr
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${CONFIG_BASE_PATH}/organizr:/config
+      - ${CONFIG_BASE_PATH}/prowlarr:/config
     ports:
-      - 9000:80
+      - 9696:9696
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_BASE_PATH}/sabnzbd:/config
+      - ${DATA_BASE_PATH}/sabnzbd/downloads:/downloads
+    ports:
+      - 8080:8080    
