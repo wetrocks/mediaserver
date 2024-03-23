@@ -103,6 +103,7 @@ services:
     volumes:
       - ${CONFIG_BASE_PATH}/lazylibrarian:/config
       - ${DATA_BASE_PATH}/transmission/downloads/complete:/downloads
+      - ${DATA_BASE_PATH}/sabnzbd/downloads/complete:/nzbdownloads
       - ${DATA_BASE_PATH}/media/books:/books
     ports:
       - 5299:5299
